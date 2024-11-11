@@ -16,7 +16,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Next Multi Step Form",
-  description: "Multi Step Form built using Next.js",
+  description: "Multi Step Form built with Next.js using React Hook Form",
 };
 
 export default function RootLayout({
