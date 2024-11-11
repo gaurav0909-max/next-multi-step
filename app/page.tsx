@@ -21,33 +21,26 @@ const FormSchema = z.object({
   name: z.string().min(3, {
     message: "Name must be at least 3 characters.",
   }),
-  email: z
-    .string()
-    .min(1, {
-      message: "Email is required.",
-    })
-    .email("This is not a valid email."),
-  phone: z
-    .string()
-    .regex(/^\+\d{1,4} \d{3} \d{3} \d{3}$/, "Invalid phone number format."),
+  email: z.string().min(1, {
+    message: "Email is required.",
+  }).email("This is not a valid email."),
+  phone: z.string().regex(/^\+\d{1,4} \d{3} \d{3} \d{3}$/, "Invalid phone number format."),
   plan: z.enum(["arcade", "advanced", "pro"], {
     required_error: "You need to select a plan.",
   }),
-  selectedPlan: z
-    .object({
-      name: z.string(),
-      label: z.string(),
-      icon: z.any(),
-      month: z.number(),
-      year: z.number(),
-    })
-    .default({
-      name: "advanced",
-      label: "Advanced",
-      icon: Gamepad,
-      month: 12,
-      year: 120,
-    }),
+  selectedPlan: z.object({
+    name: z.string(),
+    label: z.string(),
+    icon: z.any(),
+    month: z.number(),
+    year: z.number(),
+  }).default({
+    name: "advanced",
+    label: "Advanced",
+    icon: Gamepad,
+    month: 12,
+    year: 120,
+  }),
   cycle: z.object(
     {
       label: z.string(),
@@ -57,22 +50,20 @@ const FormSchema = z.object({
     { message: "You need to select a billing cycle." }
   ),
   isYear: z.boolean().default(false),
-  addons: z
-    .array(
-      z.object({
-        id: z.string(),
-        label: z.string(),
-        description: z.string(),
-        month: z.number(),
-        year: z.number(),
-      })
-    )
-    .optional(),
+  addons: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      description: z.string(),
+      month: z.number(),
+      year: z.number(),
+    })
+  ).optional(),
   total: z.number().default(0),
 });
 
 export default function Home() {
-  const methods = useForm<z.infer<typeof FormSchema>>({
+  const methods = useForm({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       totalSteps: 5,
@@ -94,53 +85,32 @@ export default function Home() {
     },
   });
 
-  const total = methods.watch("totalSteps");
   const step = methods.watch("currentStep");
 
-  const nextStep = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    let isValid;
-
-    if (step === 1) {
-      isValid = await methods.trigger(["name", "email", "phone"]);
-    }
-
-    if (step === 2) {
-      isValid = await methods.trigger(["plan"]);
-    }
-
-    if (step === 3) {
-      isValid = await methods.trigger(["addons"]);
-    }
-
-    if (isValid) {
+  const nextStep = methods.handleSubmit((data) => {
+    if (step < data.totalSteps) {
       methods.setValue("currentStep", step + 1);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "Not all the fields are filled.",
-      });
     }
-  };
+  });
 
   const prevStep = () => {
-    if (step === 1) return;
-    methods.setValue("currentStep", step - 1);
+    if (step > 1) {
+      methods.setValue("currentStep", step - 1);
+    }
   };
 
-  // data: z.infer<typeof FormSchema>
-  function onSubmit() {
+  function onSubmit(data) {
     methods.setValue("currentStep", 5);
-    // toast({
-    //   title: "You submitted the following values:",
-    //   description: (
-    //     <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-    //       <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-    //     </pre>
-    //   ),
-    // });
+    toast({
+      title: "Submission Successful!",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    });
   }
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center w-full">
@@ -148,37 +118,23 @@ export default function Home() {
           <Card className="w-full max-w-2xl">
             <CardContent className="flex flex-col md:flex-row p-6 space-y-4 md:space-y-0 md:space-x-4">
               <Stepper />
-              <form
-                id="hook-form"
-                onSubmit={methods.handleSubmit(onSubmit)}
-                className="space-y-6 grow"
-              >
+              <div className="space-y-6 grow">
                 {step === 1 && <StepOne />}
                 {step === 2 && <StepTwo />}
                 {step === 3 && <StepThree />}
                 {step === 4 && <StepFour />}
                 {step === 5 && <ThankYou />}
-              </form>
+              </div>
             </CardContent>
             {step !== 5 && (
               <CardFooter className="flex flex-row justify-between">
-                <Button
-                  variant="outline"
-                  onClick={prevStep}
-                  disabled={step === 1}
-                >
+                <Button variant="outline" onClick={prevStep} disabled={step === 1}>
                   <ArrowLeft className="h-4 w-4" />
                   Go Back
                 </Button>
-                {step === total - 1 ? (
-                  <Button type="submit" form="hook-form">
-                    Confirm
-                  </Button>
-                ) : (
-                  <Button onClick={nextStep}>
-                    Next Step <ArrowRight className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button type={step === methods.getValues("totalSteps") - 1 ? "submit" : "button"} onClick={step < 5 ? nextStep : undefined}>
+                  {step === methods.getValues("totalSteps") - 1 ? "Confirm" : "Next Step"} <ArrowRight className="h-4 w-4" />
+                </Button>
               </CardFooter>
             )}
           </Card>
