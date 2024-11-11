@@ -86,7 +86,7 @@ export function StepThree() {
                           </FormControl>
                           <div className="flex flex-row items-center justify-between w-full">
                             <div className="flex flex-col space-y-1 font-normal">
-                              <p>{addon.label}</p>
+                              <p className="font-semibold">{addon.label}</p>
                               <FormDescription className="leading-none">
                                 {addon.description}
                               </FormDescription>
