@@ -29,22 +29,25 @@ export function StepFour() {
         <div className="font-semibold ml-auto">
           ${selectedPlan[cycle.name]}/{cycle.shorthand}
         </div>
-        <Separator className="col-span-2" />
-        {selectedAddons.length > 0 &&
-          selectedAddons.map((addon: Addon, index: number) => {
-            const amount = addon[cycle.name];
-            return (
-              <Fragment key={index}>
-                <div className="font-semibold">{addon.label}</div>
-                <div className="font-semibold ml-auto">
-                  +${amount}/{cycle.shorthand}
-                </div>
-              </Fragment>
-            );
-          })}
+        {selectedAddons.length > 0 ? (
+          <>
+            <Separator className="col-span-2" />
+            {selectedAddons.map((addon: Addon, index: number) => {
+              const amount = addon[cycle.name];
+              return (
+                <Fragment key={index}>
+                  <div className="text-neutral-500">{addon.label}</div>
+                  <div className="ml-auto">
+                    +${amount}/{cycle.shorthand}
+                  </div>
+                </Fragment>
+              );
+            })}
+          </>
+        ) : null}
       </div>
-      <div className="grid grid-cols-2 p-4">
-        <div>Total (per {cycle.name})</div>
+      <div className="grid grid-cols-2 p-4 pt-0">
+        <div className="text-neutral-500">Total (per {cycle.name})</div>
         <div className="font-semibold ml-auto">${total}</div>
       </div>
     </div>
